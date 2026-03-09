@@ -1,0 +1,211 @@
+/* Reset e scoped styles para garantir que a extensão não conflite muito com a página */
+#revisa-ai-root {
+    all: initial;
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    /* Let clicks pass through except on inner interactive elements */
+    z-index: 2147483647;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Floating Action Button - The Sparkle Icon */
+.revisa-fab {
+    pointer-events: auto;
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-radius: 8px;
+    /* Slightly rounded square */
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+    opacity: 0;
+    /* Hidden by default */
+    transform: scale(0.9);
+    pointer-events: none;
+    /* Ignore clicks when hidden */
+}
+
+.revisa-fab.visible {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+}
+
+.revisa-fab:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.revisa-fab svg {
+    width: 15px;
+    height: 15px;
+    color: #4f46e5;
+}
+
+/* Modal Popup Window (Glassmorphism) */
+.revisa-modal {
+    pointer-events: auto;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    width: 450px;
+    max-width: 90vw;
+    padding: 24px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.revisa-modal.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Header */
+.revisa-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.revisa-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 16px;
+}
+
+.revisa-brand svg {
+    width: 20px;
+    height: 20px;
+    color: #4f46e5;
+}
+
+.revisa-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.revisa-close:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+/* Content Area */
+.revisa-content-box {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #334155;
+    min-height: 80px;
+    max-height: 300px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.revisa-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #64748b;
+    font-size: 14px;
+    padding: 24px 0;
+}
+
+.revisa-loader-circle {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: revisa-spin 1s linear infinite;
+}
+
+@keyframes revisa-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Actions */
+.revisa-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.revisa-btn {
+    border: none;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.revisa-btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.revisa-btn-secondary:hover {
+    background: #e2e8f0;
+}
+
+.revisa-btn-primary {
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: white;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+}
+
+.revisa-btn-primary:hover {
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+    transform: translateY(-1px);
+}
+
+.revisa-btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Error state */
+.revisa-error-msg {
+    color: #ef4444;
+    font-size: 14px;
+}

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - RevisaAI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="options.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <img src="../assets/icon-48.png" alt="RevisaAI Logo">
+                <h1>RevisaAI</h1>
+            </div>
+            <p>Configure a sua extensão com a chave correta para o funcionamento da Inteligência Artificial.</p>
+        </header>
+
+        <main>
+            <form id="options-form">
+                <div class="form-group">
+                    <label for="apiKey">Chave da API Groq <span class="required">*</span></label>
+                    <input type="password" id="apiKey" placeholder="gsk_..." required>
+                    <p class="help-text">Obtenha sua chave gratuita no <a href="https://console.groq.com/keys"
+                            target="_blank">Groq Console</a>.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="model">Modelo de IA</label>
+                    <select id="model">
+                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile</option>
+                        <option value="llama3-70b-8192">Llama 3 70B</option>
+                        <option value="mixtral-8x7b-32768">Mixtral 8x7b</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="language">Idioma Padrão</label>
+                    <select id="language">
+                        <option value="pt-BR">Português (Brasil)</option>
+                        <option value="en-US">Inglês (Estados Unidos)</option>
+                        <option value="es-ES">Espanhol</option>
+                    </select>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" id="saveBtn" class="primary-btn">Salvar Configurações</button>
+                    <span id="status" class="status-message"></span>
+                </div>
+            </form>
+        </main>
+
+        <footer>
+            <p>RevisaAI &copy; 2024</p>
+        </footer>
+    </div>
+    <script src="options.js"></script>
+</body>
+
+</html>

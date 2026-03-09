@@ -1,0 +1,48 @@
+{
+    "manifest_version": 3,
+    "name": "RevisaAI",
+    "version": "0.0.1",
+    "description": "Corrija ortografia e melhore textos diretamente em campos de digitação usando Inteligência Artificial.",
+    "permissions": [
+        "storage",
+        "activeTab",
+        "scripting"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "background": {
+        "service_worker": "background/background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "css": [
+                "content/content.css"
+            ],
+            "js": [
+                "content/content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "options_ui": {
+        "page": "options/options.html",
+        "open_in_tab": true
+    },
+    "icons": {
+        "16": "assets/icon-16.png",
+        "48": "assets/icon-48.png",
+        "128": "assets/icon-128.png"
+    },
+    "action": {
+        "default_icon": {
+            "16": "assets/icon-16.png",
+            "48": "assets/icon-48.png",
+            "128": "assets/icon-128.png"
+        },
+        "default_title": "RevisaAI - Opções"
+    }
+}
