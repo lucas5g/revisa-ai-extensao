@@ -2,7 +2,7 @@
 message=$1
 
 #zip todos os arquivos
-zip -r auto.zip .
+zip -r revisa-ai-extensao.zip .
 
 git add .
 git commit -m "$message"
