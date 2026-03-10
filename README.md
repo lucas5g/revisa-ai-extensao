@@ -7,7 +7,7 @@ Uma extensão para o Chrome projetada para revisar e corrigir textos em tempo re
 Siga os passos abaixo para instalar a extensão no seu navegador Chrome para desenvolvimento:
 
 1. **Baixe e extraia a extensão**  
-   Faça o download do arquivo `revisa-ai-extensao.zip` e extraia seu conteúdo para uma pasta de sua preferência.
+   Faça o download do arquivo [revisa-ai-extensao.zip](./revisa-ai-extensao.zip) e extraia seu conteúdo para uma pasta de sua preferência.
 
 2. **Acesse a página de extensões**  
    Abra o Chrome e digite `chrome://extensions/` na barra de endereços ou vá em `Menu > Extensões > Gerenciar Extensões`.
