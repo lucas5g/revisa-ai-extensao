@@ -1,4 +1,7 @@
-document.addEventListener('DOMContentLoaded', restoreOptions);
+document.addEventListener('DOMContentLoaded', () => {
+    restoreOptions();
+    document.getElementById('year').textContent = new Date().getFullYear();
+});
 document.getElementById('options-form').addEventListener('submit', saveOptions);
 
 function saveOptions(e) {
