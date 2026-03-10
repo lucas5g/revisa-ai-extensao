@@ -1,0 +1,9 @@
+#!/bin/bash
+message=$1
+
+#zip todos os arquivos
+zip -r auto.zip .
+
+git add .
+git commit -m "$message"
+git push
