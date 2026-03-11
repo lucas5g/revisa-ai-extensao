@@ -5,6 +5,21 @@ let fabElement = null;
 let modalElement = null;
 let isProcessing = false;
 
+let shortcutOpen = 'Tab';
+let shortcutApply = 'Enter';
+
+chrome.storage.sync.get({ shortcutOpen: 'Tab', shortcutApply: 'Enter' }, (items) => {
+    shortcutOpen = items.shortcutOpen;
+    shortcutApply = items.shortcutApply;
+});
+
+chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'sync') {
+        if (changes.shortcutOpen) shortcutOpen = changes.shortcutOpen.newValue;
+        if (changes.shortcutApply) shortcutApply = changes.shortcutApply.newValue;
+    }
+});
+
 // Inicializa os elementos UI
 function initUI() {
     if (document.getElementById('revisa-ai-root')) return;
@@ -65,10 +80,27 @@ function initUI() {
     document.addEventListener('keydown', handleKeyDown, true);
 }
 
+function getShortcutString(e) {
+    let keys = [];
+    if (e.ctrlKey) keys.push('Ctrl');
+    if (e.altKey) keys.push('Alt');
+    if (e.shiftKey) keys.push('Shift');
+    if (e.metaKey) keys.push('Meta');
+    
+    if (!['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) {
+        let keyVal = e.key;
+        if (keyVal === ' ') keyVal = 'Space';
+        keys.push(keyVal.length === 1 ? keyVal.toUpperCase() : keyVal);
+    }
+    
+    return keys.join('+');
+}
+
 function handleKeyDown(e) {
     if (!modalElement) return;
 
     const isModalOpen = modalElement.classList.contains('open');
+    const currentShortcut = getShortcutString(e);
 
     // Esc => fechar modal
     if (e.key === 'Escape' && isModalOpen) {
@@ -79,7 +111,7 @@ function handleKeyDown(e) {
     }
 
     // Enter => Aplicar e Substituir (quando modal aberto)
-    if (e.key === 'Enter' && isModalOpen) {
+    if (currentShortcut === shortcutApply && isModalOpen) {
         const applyBtn = document.getElementById('revisa-apply');
         // Só aplica se o botão estiver visível (ou seja, se a requisição já terminou)
         if (applyBtn && applyBtn.style.display !== 'none') {
@@ -92,7 +124,7 @@ function handleKeyDown(e) {
 
     // Tab => abrir modal de revisão
     // Dispara se o botão FAB estiver visível e o foco for no elemento atual e o modal não estiver aberto
-    if (e.key === 'Tab' &&
+    if (currentShortcut === shortcutOpen &&
         fabElement &&
         fabElement.classList.contains('visible') &&
         currentActiveElement === document.activeElement &&
@@ -133,6 +165,9 @@ function updateFABPosition() {
     fabElement.style.left = `${fabLeft}px`;
 }
 
+let savedMentions = {};
+let mentionCounter = 0;
+
 function isValidElement(element) {
     if (!element) return false;
 
@@ -157,8 +192,100 @@ function isValidElement(element) {
 function getTextFromElement(element) {
     if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
         return element.value;
-    } else if (element.isContentEditable) {
-        return element.innerText || element.textContent;
+    }
+    
+    if (element.isContentEditable) {
+        savedMentions = {};
+        mentionCounter = 0;
+
+        const clone = element.cloneNode(true);
+        
+        const mentions = Array.from(clone.querySelectorAll('*[itemtype*="Mention"], mention, [data-mention], .mention'));
+        let previousMentionGroup = null;
+        let currentGroupKey = null;
+
+        mentions.forEach(m => {
+            if (m.getAttribute('data-processed') === 'true') return;
+            
+            const childMentions = m.querySelectorAll('*[itemtype*="Mention"], mention, [data-mention], .mention');
+            childMentions.forEach(c => c.setAttribute('data-processed', 'true'));
+
+            const innerMention = m.tagName.toLowerCase() === 'mention' ? m : m.querySelector('mention');
+            let uniqueId = null;
+            if (innerMention && innerMention.getAttribute('mri')) {
+                uniqueId = innerMention.getAttribute('mri');
+            } else if (m.getAttribute('data-id')) {
+                uniqueId = m.getAttribute('data-id');
+            }
+
+            let name = (m.innerText || m.textContent).trim();
+            if (!name) {
+                m.setAttribute('data-processed', 'true');
+                return;
+            }
+
+            let isContinuation = false;
+            if (uniqueId && previousMentionGroup === uniqueId) {
+                isContinuation = true;
+            } else if (!uniqueId) {
+                let prev = m.previousSibling;
+                let textBtw = "";
+                while (prev && prev.nodeType === Node.TEXT_NODE) {
+                    textBtw = prev.textContent + textBtw;
+                    prev = prev.previousSibling;
+                }
+                if (prev && prev.nodeType === Node.ELEMENT_NODE && prev.getAttribute('data-processed') === 'true') {
+                    if (!textBtw.replace(/[\s\u00A0]/g, '')) {
+                        isContinuation = true;
+                    }
+                }
+            }
+            
+            if (!isContinuation) {
+                currentGroupKey = `[MEN_${mentionCounter}]`;
+                savedMentions[currentGroupKey] = {
+                    html: m.outerHTML,
+                    text: '@' + name
+                };
+                mentionCounter++;
+                previousMentionGroup = uniqueId || ('no-id-' + Math.random());
+                
+                const textNode = document.createTextNode(currentGroupKey);
+                m.parentNode.replaceChild(textNode, m);
+            } else {
+                // Junta ao grupo anterior
+                savedMentions[currentGroupKey].html += '&nbsp;' + m.outerHTML;
+                savedMentions[currentGroupKey].text += ' ' + name;
+                
+                // Remove esse nó e APENAS os espaços formados por text nodes vazios
+                let prev = m.previousSibling;
+                while (prev && prev.nodeType === Node.TEXT_NODE) {
+                    if (!prev.textContent.replace(/[\s\u00A0]/g, '')) {
+                        let toRemove = prev;
+                        prev = prev.previousSibling;
+                        toRemove.parentNode.removeChild(toRemove);
+                    } else {
+                        break; // Se encontrou texto real, para de tentar apagar!
+                    }
+                }
+                m.parentNode.removeChild(m);
+            }
+            m.setAttribute('data-processed', 'true');
+        });
+
+        const tempDiv = document.createElement('div');
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        tempDiv.style.visibility = 'hidden';
+        tempDiv.style.whiteSpace = 'pre-wrap'; // ajuda a preservar quebras de linha no innerText
+        
+        tempDiv.appendChild(clone);
+        document.body.appendChild(tempDiv);
+        
+        const text = tempDiv.innerText || tempDiv.textContent;
+        document.body.removeChild(tempDiv);
+        
+        return text;
     }
     return "";
 }
@@ -182,8 +309,10 @@ function setTextToElement(element, text) {
 
         element.dispatchEvent(new Event('input', { bubbles: true }));
         element.dispatchEvent(new Event('change', { bubbles: true }));
-
-    } else if (element.isContentEditable) {
+        return;
+    } 
+    
+    if (element.isContentEditable) {
         let rootEditable = element;
         while (rootEditable.parentElement && rootEditable.parentElement.isContentEditable) {
             rootEditable = rootEditable.parentElement;
@@ -202,11 +331,22 @@ function setTextToElement(element, text) {
         // Dispara o selectionchange pra acordar o listener do editor que diz "o texto todo tá azul!"
         document.dispatchEvent(new Event('selectionchange', { bubbles: true }));
 
-        // 2. Cria o objeto "Clipboard" (área de transferência) falso com o texto da IA
+        // Restaura as menções no texto antes de colar
+        let plainText = text;
+        let htmlText = text.replace(/\n/g, '<br>');
+        
+        for (const [placeholder, data] of Object.entries(savedMentions)) {
+            // Escapa colchetes
+            const safePlaceholder = placeholder.replace(/\[/g, '\\[').replace(/\]/g, '\\]');
+            const regex = new RegExp(safePlaceholder, 'g');
+            plainText = plainText.replace(regex, data.text);
+            htmlText = htmlText.replace(regex, data.html);
+        }
+
+        // 2. Cria o objeto "Clipboard" (área de transferência) falso com o texto da IA modificado
         const dataTransfer = new DataTransfer();
-        dataTransfer.setData('text/plain', text);
-        // Muitos editores preferem extrair do texto HTML primeiro
-        dataTransfer.setData('text/html', text.replace(/\n/g, '<br>'));
+        dataTransfer.setData('text/plain', plainText);
+        dataTransfer.setData('text/html', htmlText);
 
         // 3. Monta o evento "Paste" idêntico ao de usar Ctrl+V
         const pasteEvent = new ClipboardEvent('paste', {
@@ -222,7 +362,7 @@ function setTextToElement(element, text) {
 
             // 5. Fallback se não for um editor complexo como o MS Teams:
             if (!wasCanceled) {
-                document.execCommand('insertText', false, text);
+                document.execCommand('insertHTML', false, htmlText);
                 rootEditable.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
             }
 
@@ -337,8 +477,18 @@ async function triggerRevision() {
 
             // Exibe o texto revisado
             latestSuggestion = response.suggestion;
+            
+            // Processa o latestSuggestion para visualização no Modal
+            let displaySuggestion = latestSuggestion;
+            for (const [placeholder, data] of Object.entries(savedMentions)) {
+                const safePlaceholder = placeholder.replace(/\[/g, '\\[').replace(/\]/g, '\\]');
+                const regex = new RegExp(safePlaceholder, 'g');
+                // Troca visualmente para @Nome No Popup
+                displaySuggestion = displaySuggestion.replace(regex, `<span style="color: #6366f1; font-weight: 500;">${data.text}</span>`);
+            }
+            
             // Para visualização, vamos trocar as quebras de linha por <br>
-            contentArea.innerHTML = latestSuggestion.replace(/\n/g, '<br>');
+            contentArea.innerHTML = displaySuggestion.replace(/\n/g, '<br>');
 
             document.getElementById('revisa-apply').style.display = 'block';
             document.getElementById('revisa-copy').style.display = 'block';
