@@ -141,8 +141,6 @@ function updateFABPosition() {
     if (!fabElement || !currentActiveElement || !fabElement.classList.contains('visible')) return;
 
     const rect = currentActiveElement.getBoundingClientRect();
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    const scrollLeft = window.scrollX || document.documentElement.scrollLeft;
 
     // Calculating scrollbar sizes and element borders
     const style = getComputedStyle(currentActiveElement);
@@ -158,11 +156,12 @@ function updateFABPosition() {
     const fabHeight = 28;
     const padding = 8; // internal padding distance
 
-    const fabTop = rect.bottom + scrollTop - fabHeight - padding - borderBottom - Math.max(0, scrollbarHeight);
-    const fabLeft = rect.right + scrollLeft - fabWidth - padding - borderRight - Math.max(0, scrollbarWidth);
+    const fabTop = rect.bottom - fabHeight - padding - borderBottom - Math.max(0, scrollbarHeight);
+    const fabLeft = rect.right - fabWidth - padding - borderRight - Math.max(0, scrollbarWidth);
 
     fabElement.style.top = `${fabTop}px`;
     fabElement.style.left = `${fabLeft}px`;
+    fabElement.style.position = 'fixed';
 }
 
 let savedMentions = {};

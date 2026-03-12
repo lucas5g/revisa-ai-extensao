@@ -1,9 +1,11 @@
 /* Reset e scoped styles para garantir que a extensão não conflite muito com a página */
 #revisa-ai-root {
     all: initial;
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
+    width: 100vw;
+    height: 100vh;
     pointer-events: none;
     /* Let clicks pass through except on inner interactive elements */
     z-index: 2147483647;
